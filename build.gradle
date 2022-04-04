@@ -59,7 +59,6 @@ subprojects {
         with jar
     }
 
-
     repositories {
         mavenCentral()
         maven { url "https://jitpack.io" }
@@ -70,7 +69,6 @@ subprojects {
 
         // https://mvnrepository.com/artifact/com.beust/jcommander
         implementation 'com.beust:jcommander:1.82'
-
     }
 
     configurations.all {

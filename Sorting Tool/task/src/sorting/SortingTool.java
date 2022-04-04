@@ -2,20 +2,28 @@ package sorting;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
 
 import java.util.*;
 
 public class SortingTool {
     @Parameter(names = "-dataType")
-    public static String dataType = "word";
+    public static String dataType = null;
     @Parameter (names = "-sortingType")
-    public static String sortingType = "natural";
+    public static String sortingType = null;
 
     public static void printLongType(Scanner scanner, ArrayList<Long> list, String sortingType) {
-        while (scanner.hasNextLong()) {
-            long number = scanner.nextLong();
-            list.add(number);
+        ArrayList<String> invalidValue = new ArrayList<>();
+        while (scanner.hasNext()) {
+            String value = scanner.next();
+            try {
+                long number = Long.parseLong(value);
+                list.add(number);
+            } catch (NumberFormatException exc) {
+                invalidValue.add(value);
+            }
         }
+        invalidValue.forEach((a) -> System.out.printf("\"%s\" is not a long. It will be skipped.%n", a));
 
         if (sortingType.equals("byCount")) {
             list.sort(Comparator.comparingLong(a -> Collections.frequency(list, a)).thenComparingLong(a -> (long) a));
@@ -81,11 +89,8 @@ public class SortingTool {
     }
 
     public static void startSortingTool(String[] args) {
-        JCommander commander = JCommander
-                .newBuilder()
-                .addObject(new SortingTool())
-                .build();
-        commander.parse(args);
+        printError(args);
+
         Scanner scanner = new Scanner(System.in);
 
         switch (dataType) {
@@ -102,5 +107,37 @@ public class SortingTool {
                 SortingTool.printWordType(scanner, wordList, sortingType);
                 break;
         }
+    }
+
+    public static void printError(String[] args) {
+        List<String> argv = new ArrayList<>(List.of(args));
+        JCommander commander;
+        while (true) {
+            String[] array = new String[argv.size()];
+            argv.toArray(array);
+            commander = JCommander
+                    .newBuilder()
+                    .addObject(new SortingTool())
+                    .build();
+            try {
+                commander.parse(array);
+                break;
+            } catch (ParameterException exc) {
+                String type = exc.toString().substring(exc.toString().indexOf("-"));
+                if (type.contains("-sortingType")) {
+                    System.out.println("No sorting type defined!");
+                    System.exit(0);
+                } else if (type.contains("-dataType")) {
+                    System.out.println("No data type defined!");
+                    System.exit(0);
+                } else {
+                    type = type.substring(0, type.indexOf("'"));
+                    argv.remove(type);
+                    System.out.printf("\"%s\" is not a valid parameter. It will be skipped.%n", type);
+                }
+            }
+        }
+        sortingType = sortingType == null ? "natural" : sortingType;
+        dataType = dataType == null ? "word" : dataType;
     }
 }
